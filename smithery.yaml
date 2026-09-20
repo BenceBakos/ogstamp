@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=https://smithery.ai/schema.json
+name: ogstamp
+description: Pay-as-you-go Open Graph image MCP. Renders 1200x630 PNGs. Credits never expire.
+homepage: https://ogstamp.com/for-ai-agents/
+remote:
+  type: streamable-http
+  url: https://ogstamp.com/mcp
