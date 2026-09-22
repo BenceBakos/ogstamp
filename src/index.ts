@@ -50,6 +50,15 @@ function joinUrl(base: string, path: string) {
   return `${base.replace(/\/$/, "")}${path}`;
 }
 
+export type HostedImage = {
+  ok: true;
+  url: string;
+  id: string;
+  credits: number;
+  content_type: string;
+  html: string;
+};
+
 /**
  * Minimal OG Stamp HTTP client.
  * Prefer Authorization headers — query-string api_key is rejected by the API.
@@ -86,6 +95,28 @@ export class OgStamp {
     return new Uint8Array(await res.arrayBuffer());
   }
 
+  /**
+   * Render and host the PNG on ogstamp.com. Returns a stable public URL for og:image
+   * (opaque /i/{id}.png — no API key in HTML). Requires apiKey.
+   */
+  async store(input: RenderInput): Promise<HostedImage> {
+    if (!this.apiKey) throw new Error("apiKey required for store()");
+    const res = await fetch(joinUrl(this.baseUrl, "/api/og?store=1&format=json"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...this.authHeaders(),
+      },
+      body: JSON.stringify({ ...input, store: true }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`OG Stamp store failed (${res.status}): ${text.slice(0, 240)}`);
+    }
+    return (await res.json()) as HostedImage;
+  }
+
   /** Build a card from a public page URL (title/description/favicon). */
   async renderFromUrl(input: AutoInput): Promise<Uint8Array> {
     const u = new URL(joinUrl(this.baseUrl, "/api/auto"));
@@ -100,6 +131,25 @@ export class OgStamp {
       throw new Error(`OG Stamp auto failed (${res.status}): ${text.slice(0, 240)}`);
     }
     return new Uint8Array(await res.arrayBuffer());
+  }
+
+  /** Host a card built from a public page URL. Requires apiKey. */
+  async storeFromUrl(input: AutoInput): Promise<HostedImage> {
+    if (!this.apiKey) throw new Error("apiKey required for storeFromUrl()");
+    const u = new URL(joinUrl(this.baseUrl, "/api/auto"));
+    for (const [k, v] of Object.entries(input)) {
+      if (v != null && v !== "") u.searchParams.set(k, String(v));
+    }
+    u.searchParams.set("store", "1");
+    u.searchParams.set("format", "json");
+    const res = await fetch(u, {
+      headers: { Accept: "application/json", ...this.authHeaders() },
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`OG Stamp storeFromUrl failed (${res.status}): ${text.slice(0, 240)}`);
+    }
+    return (await res.json()) as HostedImage;
   }
 
   /** Alias for renderFromUrl — accepts AutoInput or a URL string. */
