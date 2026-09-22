@@ -42,3 +42,9 @@ No key required for light use. Free renders are watermarked and metered per site
 ## License
 
 MIT
+
+## Integrations
+
+- n8n community node: https://github.com/BenceBakos/n8n-nodes-ogstamp
+- WordPress plugin: in review on wordpress.org (`og-stamp`)
+- MCP: https://ogstamp.com/mcp
