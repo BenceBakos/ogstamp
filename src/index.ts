@@ -88,11 +88,6 @@ export class OgStamp {
 
   /** Build a card from a public page URL (title/description/favicon). */
   async renderFromUrl(input: AutoInput): Promise<Uint8Array> {
-  /** Alias for renderFromUrl */
-  auto(input: AutoInput | string) {
-    return this.renderFromUrl(typeof input === "string" ? { url: input } : input);
-  }
-
     const u = new URL(joinUrl(this.baseUrl, "/api/auto"));
     for (const [k, v] of Object.entries(input)) {
       if (v != null && v !== "") u.searchParams.set(k, String(v));
@@ -105,6 +100,11 @@ export class OgStamp {
       throw new Error(`OG Stamp auto failed (${res.status}): ${text.slice(0, 240)}`);
     }
     return new Uint8Array(await res.arrayBuffer());
+  }
+
+  /** Alias for renderFromUrl — accepts AutoInput or a URL string. */
+  auto(input: AutoInput | string): Promise<Uint8Array> {
+    return this.renderFromUrl(typeof input === "string" ? { url: input } : input);
   }
 
   async credits(): Promise<Credits> {
